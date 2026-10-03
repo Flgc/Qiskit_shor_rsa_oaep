@@ -1,0 +1,46 @@
+# Ambientes virtuais
+qenv/
+venv/
+venv_shor/
+env/
+venv_build/
+build_venv/
+
+# Arquivos de cache e bytecode Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Builds e distribuições
+build/
+dist/
+*.egg-info/
+*.egg
+*.spec
+
+# Arquivos gerados por IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Arquivos de dados gerados pela aplicação (opcional, se não quiser versionar)
+#.png
+*.npz
+*.jpg
+*.log
+
+# Arquivos de sistema
+.DS_Store
+Thumbs.db
+
+# Scripts de instalação gerados (se não fizerem parte do código fonte)
+install.sh
+run.sh
+*.desktop
+
+# Arquivos temporários
+*.tmp
+*.bak

@@ -47,3 +47,33 @@ def generate_rsa_params(p, q):
         e += 2
     d = modinv(e, phi)
     return N, phi, e, d
+
+# Funções quânticas (Óráculo dinâmico e IQFT)
+
+def get_U_matrix(a, N, m):
+    """
+    Constrói a matriz de permutação unitária para a função f(x) = (x * a) mod N.
+    Devido às limitações de síntese clássica no Qiskit 1.x para N genérico sem
+    implementar somadores quânticos complexo, sintetizamos a matriz exata para
+    instâncias reduzidas.
+    """
+    size = 2**m
+    U = np.zeros((size, size))
+    for y in range(size):
+        if y < N:
+            target = (y * a) % N
+            U[target, y] = 1
+        else:
+            U[y, y] = 1 # Identidade para estados além de N  
+    return U 
+
+def qft_dagger(n):
+    """Transformada de Fourier Quântica Inversa (IQFT ou QFT†)"""
+    qc = QuantumCircuit(n, name="QFT†")
+    for qubit in range(n // 2):
+        qc.swap(qubit, n - qubit - 1)
+    for j in range(n):
+        for m in range(j):            
+            qc.cp(-np.pi / float(2**(j - m)), m, j)
+        qc.h(j)    
+    return qc.to_gate()    

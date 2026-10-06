@@ -181,3 +181,41 @@ for idx, (p, q) in enumerate(instancias):
         plot_histogram(contagens, title=f"Distribuição para N={N}", figsize=(12, 6))
         plt.savefig(f"shor_rsa_oaep_histograma_N{N}.png")
         print(f"\n[✔] Histograma da maior instância salvo como: \n'shor_rsa_oaep_histograma_N{N}.png'.")
+
+
+"""
+Gráficos: (Crescimento do problema - exigência do capítulo 3.2)
+"""
+bist_list   = [res['bits']        for res in resultados_metricas]
+qubits_list = [res['qubits']      for res in resultados_metricas]
+depth_list  = [res['depth']       for res in resultados_metricas]
+gates_list  = [res['total_gates'] for res in resultados_metricas]
+time_list   = [res['time']        for res in resultados_metricas]
+
+fig, axs = plt.subplots(2, 2, figsize=(14, 10))
+fig.subtitle('Crescimento do problema e recursos quânticos (Cápitulo 3.2)')
+
+axs[0, 0].plot(bist_list, qubits_list, marker='o', color='b')
+axs[0, 0].set_title('Número de qubit x tamanho da chave')
+axs[0, 0].set_xlabel('Tamanho da chave (bits)')
+axs[0, 0].set_ylabel('Qubits lógicos')
+
+axs[0, 0].plot(bist_list, depth_list, marker='s', color='r')
+axs[0, 0].set_title('Circuito Depth x tamanho da chave')
+axs[0, 0].set_xlabel('Tamanho da chave (bits)')
+axs[0, 0].set_ylabel('Profundidade do circuito')
+
+axs[0, 0].plot(bist_list, gates_list, marker='^', color='g')
+axs[0, 0].set_title('Número de gates x tamanho da chave')
+axs[0, 0].set_xlabel('Tamanho da chave (bits)')
+axs[0, 0].set_ylabel('Total de gates')
+
+axs[0, 0].plot(bist_list, time_list, marker='d', color='purple')
+axs[0, 0].set_title('Tempo de execução x tamanho da chave')
+axs[0, 0].set_xlabel('Tamanho da chave (bits)')
+axs[0, 0].set_ylabel('Tempo (segundos)')
+
+plt.tight_layout()
+plt.savefig("shor_rsa_oaep_crescimento_problema.png")
+print(f"\n[✔] Gráficos de crescimento salvos como: \n'shor_rsa_oaep_crescimento_problema.png'.")
+print(f"\n=== Experimento concluído com sucesso ===")

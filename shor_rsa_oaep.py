@@ -76,4 +76,108 @@ def qft_dagger(n):
         for m in range(j):            
             qc.cp(-np.pi / float(2**(j - m)), m, j)
         qc.h(j)    
-    return qc.to_gate()    
+    return qc.to_gate()   
+
+""" 
+Tratando exigências do capítulo 3.2 (Crescimento do problema) 
+Execução do experimento
+
+4 instâncias reduzidas progressivas;
+Representam diferentes tamanhos de chave (N)
+"""
+
+instancias = [(3, 5), (3, 7), (3, 11), (5, 7)] 
+resultados_metricas = []
+
+simulador = AerSimulator()
+shots = 1024
+
+print("=== Início da avaliação experimental: Shor vs RSA-OAEP ===")
+
+for idx, (p, q) in enumerate(instancias):
+    N, phi, e, d = generate_rsa_params(p, q)
+    tamanho_bits = N.bit_length()
+
+    print(f"\n--- Analisando instância {idx+1}: N={N} ({tamanho_bits} bits) ---")
+
+    # Configuração quântica
+    a = 2                       # 'a' coprimo de todos os N escolhidos
+    m = math.ceil(math.log2(N)) # Qubits do registrador alvo
+    n_count = 2 * m             # Qubits do registrador de contagem para precisão
+    total_qubits = n_count + m
+
+    start_time = time.time()
+
+    # 1. Inicialização
+    qc = QuantumCircuit(total_qubits, n_count)
+    for qubit in range(n_count):
+        qc.h(qubit)
+    qc.x(n_count)               # Eigenstate |1> no registrador alvo (LSB)
+
+    # 2. Aplicação do Oráculo controlado
+    for q_idx in range(n_count):
+        a_power = pow(a, 2**q_idx, N)
+        mat = get_U_matrix(a_power, N, m)
+        gate = UnitaryGate(mat, label=f"U^{2**q_idx}").control(1)
+        qc.append(gate, [q_idx] + list(range(n_count, n_count + m)))
+
+    # 3. Aplicação da (IQFT / QFT†) e medição
+    qc.append(qft_dagger(n_count), range(n_count))
+    qc.measure(range(n_count), range(n_count))
+
+    # 4. Transpilação e simulação
+    # optimization_level=1 para balancear tempo de síntese das matrizes e otimização
+    qc_transpilado = transpile(qc, simulador, optimization_level=1)
+
+    job = simulador.run(qc_transpilado, shots=shots)
+    contagens = job.result().get_counts()
+
+    exec_time = time.time() - start_time
+
+    # 5. Coleta das métricas (Exigência do capítulo 3.1)
+    depth = qc_transpilado.depth()
+    gates = dict(qc_transpilado.count_ops())
+    total_gates = sum(gates.values())
+    
+    # Aproximação de gates multicontrolados sintetizados
+    gates_2q = gates.get('cx', 0) + gates.get('cp', 0) + gates.get('cu', 0) 
+
+    # Avaliando probabilidade do pico correto (Simplificado: os maiores picos)
+    max_count = max(contagens.values())
+    prob = (max_count / shots) * 100
+
+    resultados_metricas.append({
+        'N': N,
+        'bits': tamanho_bits,
+        'qubits': total_qubits,
+        'depth': depth,
+        'total_gates': total_gates,
+        'time': exec_time
+    })
+
+    """ 
+    Se for a maior instância (última do loop),
+     imprime relatório completo (Exigência do capítulo 3.1)
+    """
+    if idx == len(instancias) - 1:
+        print("\n" + "="*50)
+        print("RELATÓRIO DA MAIOR INSTÂNCIA SOLUCIONADA (3.1)")
+        print("="*50)
+        print(f"Algoritmo analisado: RSA-OAEP")
+        print(f"Tamanho da instância: {tamanho_bits} bits")
+        print(f"Parâmetros criptográficos:")
+        print(f"  p={p}, q={q}, N={N}, phi(N)={phi}")
+        print(f"  Chave Pública (N, e): ({N}, {e})")
+        print(f"  Chave Privada (d): {d} (Recuperável via Shor)")
+        print(f"\nMétricas do Circuito Quântico:")
+        print(f"  Número de Qubits: {total_qubits}")
+        print(f"  Profundidade (Depth): {depth}")
+        print(f"  Total de Gates: {total_gates}")
+        print(f"  Shots executados: {shots}")
+        print(f"  Maior probabilidade de pico: {prob:.2f}%")
+        print(f"  Tempo total de execução: {exec_time:.2f} segundos")
+        print("="*50)
+        
+        plot_histogram(contagens, title=f"Distribuição para N={N}", figsize=(12, 6))
+        plt.savefig(f"shor_rsa_oaep_histograma_N{N}.png")
+        print(f"\n[✔] Histograma da maior instância salvo como: \n'shor_rsa_oaep_histograma_N{N}.png'.")

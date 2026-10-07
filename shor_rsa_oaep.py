@@ -26,11 +26,11 @@ def modinv(a, m):
     """
     Calcula o inverso modular de 'a' mod 'm' para obter a chave privada 'd'.
     """
-    mo0, x0, x1 = m, 0,1
+    m0, x0, x1 = m, 0,1
     if m == 1:
         return 0
     while a > 1:
-        q = z // m
+        q = a // m
         a, m = m, a % m
         x0, x1 = x1 - q * x0, x0
     return x1 + m0 if x1 < 0 else x1     
@@ -193,27 +193,27 @@ gates_list  = [res['total_gates'] for res in resultados_metricas]
 time_list   = [res['time']        for res in resultados_metricas]
 
 fig, axs = plt.subplots(2, 2, figsize=(14, 10))
-fig.subtitle('Crescimento do problema e recursos quânticos (Cápitulo 3.2)')
+fig.suptitle('Crescimento do problema e recursos quânticos (Cápitulo 3.2)')
 
 axs[0, 0].plot(bist_list, qubits_list, marker='o', color='b')
 axs[0, 0].set_title('Número de qubit x tamanho da chave')
 axs[0, 0].set_xlabel('Tamanho da chave (bits)')
 axs[0, 0].set_ylabel('Qubits lógicos')
 
-axs[0, 0].plot(bist_list, depth_list, marker='s', color='r')
-axs[0, 0].set_title('Circuito Depth x tamanho da chave')
-axs[0, 0].set_xlabel('Tamanho da chave (bits)')
-axs[0, 0].set_ylabel('Profundidade do circuito')
+axs[0, 1].plot(bist_list, depth_list, marker='s', color='r')
+axs[0, 1].set_title('Circuito Depth x tamanho da chave')
+axs[0, 1].set_xlabel('Tamanho da chave (bits)')
+axs[0, 1].set_ylabel('Profundidade do circuito')
 
-axs[0, 0].plot(bist_list, gates_list, marker='^', color='g')
-axs[0, 0].set_title('Número de gates x tamanho da chave')
-axs[0, 0].set_xlabel('Tamanho da chave (bits)')
-axs[0, 0].set_ylabel('Total de gates')
+axs[1, 0].plot(bist_list, gates_list, marker='^', color='g')
+axs[1, 0].set_title('Número de gates x tamanho da chave')
+axs[1, 0].set_xlabel('Tamanho da chave (bits)')
+axs[1, 0].set_ylabel('Total de gates')
 
-axs[0, 0].plot(bist_list, time_list, marker='d', color='purple')
-axs[0, 0].set_title('Tempo de execução x tamanho da chave')
-axs[0, 0].set_xlabel('Tamanho da chave (bits)')
-axs[0, 0].set_ylabel('Tempo (segundos)')
+axs[1, 1].plot(bist_list, time_list, marker='d', color='purple')
+axs[1, 1].set_title('Tempo de execução x tamanho da chave')
+axs[1, 1].set_xlabel('Tamanho da chave (bits)')
+axs[1, 1].set_ylabel('Tempo (segundos)')
 
 plt.tight_layout()
 plt.savefig("shor_rsa_oaep_crescimento_problema.png")

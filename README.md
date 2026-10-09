@@ -9,6 +9,7 @@ Algoritmo de Shor - Avaliação experimental: Criptografia RSA-OAEP
 - Analisar experimentalmente a vulnerabilidade da fatoração de ($N=pq$) (problema subjacente ao RSA-OAEP) frente à computação quântica.
   Adaptações: Atendimento aos requisitos dos Capítulos 1 a 3.2 do documento de avaliação através daconstrução de uma versão reduzida e experimentalmente tratável do problema criptográficonstrução de Shor ao problema matemático subjacente e, posteriormente, propor uma estratégia de migração para um algoritmo de criptografia pós-quântica, ou Post-Quantum Cryptography (PQC).
   construção de práticos para a avaliação experimental da vulnerabilidade do algoritmo **RSA-OAEP** frente à computação quântica (Algoritmo de Shor), bem como o planejamento para migração Pós-Quântica (PQC) utilizando o ecossistema **Qiskit 1.x**.
+- **Capítulo 5 e 5.1**: Visa propor e implementar uma estratégia de migração preservando a função criptográfica original. Substituição do RSA-OAEP (estabelecimento de chaves) pelo **ML-KEM (Kyber)**, realizando o fluxo experimental de `KeyGen -> Encaps -> Decaps` com a biblioteca Open Quantum Safe.
 
 ## 🛠️ Tecnologias Utilizadas
 
@@ -39,6 +40,13 @@ python3 -m venv venv_shor
 
 ```bash
 pip install qiskit qiskit-aer matplotlib numpy pylatexenc
+```
+
+**3.1. Instale as dependências do "C" para o linux (Capítulo 5 e 5.1)**
+
+```bash
+sudo apt update
+sudo apt install build-essential cmake ninja-build libssl-dev -y
 ```
 
 **4. Ative o ambiente virtual:**
@@ -87,7 +95,19 @@ deactivate
 
 ![Gráficos de crescimento](shor_rsa_oaep_crescimento_problema.png)
 
-## 🛠️ Resolução de problemas comuns (Troubleshooting)
+## 🛡️ Migração Pós-Quântica (Capítulo 5 e 5.1)
+
+Como o RSA-OAEP atua no estabelecimento e encapsulamento de chaves, a alternativa PQC implementada foi o **ML-KEM** (Kyber).
+
+Em observação, a primeira execução demorou um pouco mais por conta da compilação do "C" conforme demostrado nas capituras a seguir:
+
+![Compilacao1](PQC_5_1a.png)
+![Compilacao2](PQC_5_1b.png)
+![Compilacao3](PQC_5_1c.png)
+![Compilacaoe](PQC_5_1d.png)
+![Conclusao](PQC_5_1e.png)
+
+## 🔧 Resolução de problemas comuns (Troubleshooting)
 
 - **Erro `ModuleNotFoundError: No module named 'qiskit'`:** Isso ocorre se a pasta do projeto for renomeada ou movida. Ambientes virtuais quebram ao mudar de caminho. Solução: Apague a pasta `qenv`, crie-a novamente e reinstale as dependências.
 

@@ -4,11 +4,15 @@ Algoritmo de Shor - Avaliação experimental: Criptografia RSA-OAEP
 
 ## 📌 Objetivos
 
-- **Capítulo 3.1**: Demonstrar a quebra do problema matemático subjacente ($N=pq$) para a maior instância viável, recuperando parâmetros privados, documentando contagem de _gates_, _depth_, tempo e precisão estatística.
-- **Capítulo 3.2**: Analisar o crescimento de complexidade escalando o experimento para pelo menos 4 tamanhos de instâncias, discutindo as limitações de recursos (Qubits vs Tamanho da chave, Tempo vs Tamanho da chave).
+- **Capítulo 1**: Relata o objetivo principal da atividade em grupo, que consiste em analisar experimentalmente a vulnerabilidade de algoritmos criptográficos baseados em **fatoração de inteiros** ou **logartimo discreto em curvas elípticas** diante de computadores quânticos capazes de executar o algoritmo de Shor.
+- **Capítulo 2**: Por meio da tabela com os algoritmos a serem investigados, o grupo escolheu o item 7, da família do RSA, da variante RSA-OAEP e com o uso principal a criptografia RSA utilizando OAEP.
+- **Capítulo 3**: Foi proposta a io problema matemático que forneça a segurança algoritma através do desenvolvimento ou adaptação da implementação do **algoritmo de shor**.
+- **Capítulo 3.1**: Demonstrar a quebra do problema matemático subjacente ($N=pq$) para a maior instância viável, recuperando parâmetros privados, documentando co e precisão estatística.
+- **Capítulo 3.2**: Analisar o crescimento de complexidade escalando o experimento para pelo menos 4 tamanhos de instâncias, discutindo as limitações de recursos vs Tamanho da chave).
 - Analisar experimentalmente a vulnerabilidade da fatoração de ($N=pq$) (problema subjacente ao RSA-OAEP) frente à computação quântica.
   Adaptações: Atendimento aos requisitos dos Capítulos 1 a 3.2 do documento de avaliação através daconstrução de uma versão reduzida e experimentalmente tratável do problema criptográficonstrução de Shor ao problema matemático subjacente e, posteriormente, propor uma estratégia de migração para um algoritmo de criptografia pós-quântica, ou Post-Quantum Cryptography (PQC).
   construção de práticos para a avaliação experimental da vulnerabilidade do algoritmo **RSA-OAEP** frente à computação quântica (Algoritmo de Shor), bem como o planejamento para migração Pós-Quântica (PQC) utilizando o ecossistema **Qiskit 1.x**.
+- **Capítulo 4**: Comparar quantitativamente a maior instância experimental com um parâmetro real (RSA-2048), discutindo o gap tecnológico imposto por requisitos de qubits lógicos vs físicos, tempo de coerência, correção de erros (QEC) e profundidade de circuito.
 - **Capítulo 5 e 5.1**: Visa propor e implementar uma estratégia de migração preservando a função criptográfica original. Substituição do RSA-OAEP (estabelecimento de chaves) pelo **ML-KEM (Kyber)**, realizando o fluxo experimental de `KeyGen -> Encaps -> Decaps` com a biblioteca Open Quantum Safe.
 
 ## 🛠️ Tecnologias Utilizadas
@@ -76,7 +80,15 @@ python3 shor_rsa_oaep.py
 
 ## 🧮 Algoritmo de Shor (Cápitulo 1 até 3.2)
 
+Versão anterior, sem a comparação
+
 ![Execução](ExecutaShor_rsa_oaep.png)
+
+## 🔬 Comparação com parâmetros reais (Capítulo 4)
+
+Ao final da execução do algoritmo de Shor, o script gera automaticamente um relatório analítico no terminal. Ele contrasta as métricas do modelo em escala reduzida com as exigências matemáticas e de hardware para quebrar uma chave **RSA-2048**. O relatório aborda por que a vulnerabilidade algorítmica comprovada ainda esbarra em limitações físicas (decoerência, necessidade de milhões de qubits físicos para correção de erros e fidelidade de _gates_).
+
+![Comparação](Comparacao.png)
 
 **6. Encerre o ambiente:**
 

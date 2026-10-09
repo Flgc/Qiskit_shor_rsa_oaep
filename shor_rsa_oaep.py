@@ -78,8 +78,49 @@ def qft_dagger(n):
         qc.h(j)    
     return qc.to_gate()   
 
+"""
+Análise teórica e comparativa (exigências do capítulo 4 )
+"""
+def analise_capitulo4(bits_exp, qubits_exp, depth_exp, gates_exp):
+    """
+    Gera o relatório comparativo entre o experimento reduzido e um
+    criptográfico utilizado em sistemas reais (RSA-2048). abordando
+    as limitações do hardware quântico atual.
+    """
+    print("\n"+ "="*76)
+    print("COMPARAÇÃO COM PARÂMETROS CRIPTOGRÁFICOS REAIS  (Cápitulo 4)")
+    print("="*76)
+
+    print(f"[1] COMPARAÇÃO DE ESCALA (Experimento vs. RSA-2048):")
+    print("    ")
+    print(f"    - Tamanho da chave........: {bits_exp} bits (Exp) vs 2048 bits (Real)")
+    print(f"    - Qubits lógicos estimados: {qubits_exp} (Exp) vs ~4.096 a 6.144 (Real)")
+    print(f"    - Profundidade do circuito: {depth_exp} (Exp) vs Trilhões de operações (Real)")
+    
+    print("\n[2] DISCUSSÃO DE VULNERABILIDADE (Teoria vs. prática):")
+    print("    ")
+    print("    Por que o experimento demonstra a vulnerabilidade algorítmica, mas")
+    print("    não significa a quebra imediata de sistemas reais?")
+    print("    ")
+    print("    O algoritmo de Shor comprova matematicamente que a fatoração possui")
+    print("    complexidade polinomial em computadores quânticos. No entanto, a")
+    print("    execução para RSA-2048 em hardware real esbarra em severas limitações:")
+    print("    ")
+    print("    * Qubits físicos vs lógicos e QEC: Para obter ~4.000 qubits lógicos")
+    print("      estáveis, devido à Correção Quântica de Erros (QEC), seriam")
+    print("      necessários cerca de 20 milhões de qubits físicos ruidosos.")
+    print("    ")
+    print("    * Decoerência e fidelidade: O tempo de coerência dos qubits atuais")
+    print("      é muito curto para suportar a profundidade extrema do oráculo modular")
+    print("      do RSA-2048 sem que o ruído destrua a superposição.")
+    print("    ")
+    print("    * Conectividade e custo aritmético: Portas Toffoli e somadores quânticos")
+    print("      exigem alta conectividade (SWAP gates). O custo de implementação de")
+    print("      operações aritméticas quânticas cresce substancialmente na prática.")
+    print("="*76) 
+
 """ 
-Tratando exigências do capítulo 3.2 (Crescimento do problema) 
+Tratando exigências do capítulo 3.1 e 3.2 (Crescimento do problema) 
 Execução do experimento
 
 4 instâncias reduzidas progressivas;
@@ -157,12 +198,12 @@ for idx, (p, q) in enumerate(instancias):
 
     """ 
     Se for a maior instância (última do loop),
-     imprime relatório completo (Exigência do capítulo 3.1)
+     imprime relatório completo (Exigência do capítulo 3.1 e 4)
     """
     if idx == len(instancias) - 1:
-        print("\n" + "="*50)
+        print("\n" + "="*76)
         print("RELATÓRIO DA MAIOR INSTÂNCIA SOLUCIONADA (3.1)")
-        print("="*50)
+        print("="*76)
         print(f"Algoritmo analisado: RSA-OAEP")
         print(f"Tamanho da instância: {tamanho_bits} bits")
         print(f"Parâmetros criptográficos:")
@@ -176,12 +217,14 @@ for idx, (p, q) in enumerate(instancias):
         print(f"  Shots executados: {shots}")
         print(f"  Maior probabilidade de pico: {prob:.2f}%")
         print(f"  Tempo total de execução: {exec_time:.2f} segundos")
-        print("="*50)
+        print("="*76)
         
         plot_histogram(contagens, title=f"Distribuição para N={N}", figsize=(12, 6))
         plt.savefig(f"shor_rsa_oaep_histograma_N{N}.png")
         print(f"\n[✔] Histograma da maior instância salvo como: \n'shor_rsa_oaep_histograma_N{N}.png'.")
 
+        # Executa a análise do capítulo 4 passando os dados da maior instância
+        analise_capitulo4(tamanho_bits, total_qubits, depth, total_gates)
 
 """
 Gráficos: (Crescimento do problema - exigência do capítulo 3.2)

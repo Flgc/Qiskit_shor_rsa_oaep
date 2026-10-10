@@ -119,9 +119,13 @@ deactivate
 
 ![Criptografia PQC](https://img.shields.io/badge/Criptografia_PQC-⚛️_🛡️-darkblue?style=for-the-badge)
 
-Como o RSA-OAEP atua no estabelecimento e encapsulamento de chaves, a alternativa PQC implementada foi o **ML-KEM** (Kyber).
+Como o RSA-OAEP atua no estabelecimento e encapsulamento de chaves, a alternativa PQC implementada foi o **ML-KEM** (Kyber). O algoritmo obedece ao fluxo de geração de chaves (KeyGen), encapsulamento pelo remetente (Encaps) e desencapsulamento pelo destinatário (Decaps).
 
-Em observação, a primeira execução demorou um pouco mais por conta da compilação do "C" conforme demostrado nas capituras a seguir:
+O desempenho isolado destas operações foi plotado graficamente para demonstrar o comportamento do Kyber512 em hardware atual:
+
+![Desempenho isolado ML-KEM](mlkem_desempenho_isolado.png)
+
+_(Nota: Na primeira execução, o processo pode demorar alguns segundos adicionais devido à compilação em "C" da biblioteca open-quantum-safe)._
 
 ![Compilacao1](PQC_5_1a.png)
 ![Compilacao2](PQC_5_1b.png)

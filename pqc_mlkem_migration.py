@@ -217,6 +217,32 @@ print("    - ML-KEM costuma ser drasticamente mais rápido que o RSA clássico."
 print("="*82)
 
 """
+Gráfico de desempenho isolado do ML-KEM (Capítulo 5.1)
+"""
+fig_kem, axs_kem = plt.subplots(1, 2, figsize=(12, 5))
+fig_kem.suptitle('Análise de desempenho isolado: ML-KEM (Kyber512) - Capítulo 5.1')
+
+# Gráfico 1: Tamanhos (Bytes)
+labels_sizes = ['Chave pública', 'Chave privada', 'Ciphertext']
+sizes = [pqc_metrics['pub_size'], pqc_metrics['priv_size'], pqc_metrics['cipher_size']]
+bars_sizes = axs_kem[0].bar(labels_sizes, sizes, color=['#1f77b4', '#ff7f0e', '#2ca02c'])
+axs_kem[0].set_ylabel('Tamanho (Bytes)')
+axs_kem[0].set_title('Distribuição de armazenamento')
+axs_kem[0].bar_label(bars_sizes, padding=3) # Adiciona os valores acima das barras
+
+# Gráfico 2: Tempos (Segundos)
+labels_times = ['KeyGen', 'Encaps', 'Decaps']
+times = [pqc_metrics['keygen_t'], pqc_metrics['encaps_t'], pqc_metrics['decaps_t']]
+bars_times = axs_kem[1].bar(labels_times, times, color=['#d62728', '#9467bd', '#8c564b'])
+axs_kem[1].set_ylabel('Tempo (Segundos)')
+axs_kem[1].set_title('Tempo de execução por operação')
+axs_kem[1].bar_label(bars_times, fmt='%.6f', padding=3)
+
+plt.tight_layout()
+plt.savefig("mlkem_desempenho_isolado.png")
+print(f"\n[✔] Gráfico de desempenho isolado do PQC salvo como: \n'mlkem_desempenho_isolado.png'.\n")
+
+"""
 Geração de gráficos comparativos (Capítulo 6 e 6.2)
 """
 fig, axs = plt.subplots(1,2, figsize=(14, 6))
@@ -257,8 +283,7 @@ axs[1].legend()
 
 plt.tight_layout()
 plt.savefig("pqc_mlkem_comparativo.png")
-print(f"\n[✔] Gráfico comparativo salvo como: \n'pqc_mlkem_comparativo.png'.")
-
+print(f"[✔] Gráfico comparativo salvo como: \n'pqc_mlkem_comparativo.png'.\n")
 
 if __name__ == "__main__":
     executar_mlkem

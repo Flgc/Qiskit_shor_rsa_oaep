@@ -217,6 +217,42 @@ print("    - ML-KEM costuma ser drasticamente mais rápido que o RSA clássico."
 print("="*82)
 
 """
+Avaliação da migração pós-quântica (Capítulo 7)
+"""
+print("\n" + "-"*82)
+print("Avaliação da migração PQC")
+print("-"*82)
+
+# Simulação de cenário: 1.000.000 de operações
+operacoes = 1_000_000
+
+# Armazenamento (1 milhão de chaves públicas - Capítulo 7.1)
+armazenamento_rsa_mb = (rsa_metrics['pub_size'] * operacoes) / (1024**2)
+armazenamento_pqc_mb = (pqc_metrics['pub_size'] * operacoes) / (1024**2)
+diff_armazenamento = armazenamento_pqc_mb - armazenamento_rsa_mb
+
+print("[7.1] - Armazenamento (Cenário: 1 milhão de chaves públicas armazenadas):")
+print(f"      - RSA-OAEP: {armazenamento_rsa_mb:.2f} MB")
+print(f"      - ML-KEM  : {armazenamento_pqc_mb:.2f} MB")
+print(f"      - Impacto : Necessidade de +{diff_armazenamento:.2f} MB de espaço.")
+
+# Comunicação (1 milhão de encapsulamentos/transações por dia - Capítulo 7.2)
+banda_rsa_mb = (rsa_metrics['cipher_size'] * operacoes) / (1024**2)
+banda_pqc_mb = (pqc_metrics['cipher_size'] * operacoes) / (1024**2)
+diff_banda = banda_pqc_mb - banda_rsa_mb
+
+print("\n[7.2] - Comunicação (Cenário: 1 milhão de ciphertexts transmitidos/dia):")
+print(f"      - RSA-OAEP: {banda_rsa_mb:.2f} MB trafegados")
+print(f"      - ML-KEM  : {banda_pqc_mb:.2f} MB trafegados")
+print(f"      - Impacto : Aumento de +{diff_banda:.2f} MB no consumo de banda diária.")
+    
+# Processamento  (Capítulo 7.3)
+print("\n[7.3] - Processamento:")
+print(f"      - A operação de maior impacto positivo é o KeyGen ({calc_delta(pqc_metrics['keygen_t'], rsa_metrics['keygen_t']):+.2f}%).")
+print(f"      - A operação de maior impacto negativo tende a ser a latência de rede")
+print(f"         devido ao aumento do ciphertext, mais do que o consumo de CPU em si.")
+
+"""
 Gráfico de desempenho isolado do ML-KEM (Capítulo 5.1)
 """
 fig_kem, axs_kem = plt.subplots(1, 2, figsize=(12, 5))

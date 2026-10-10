@@ -253,6 +253,42 @@ print(f"      - A operação de maior impacto negativo tende a ser a latência d
 print(f"         devido ao aumento do ciphertext, mais do que o consumo de CPU em si.")
 
 """
+Análise Final (Capítulo 8)
+"""
+print("\n" + "="*82)
+print("Análise final (Capítulo 8)")
+print("="*82)
+print("Q1. Maior instância comprometida via Shor:")
+print("    R: N=35 (6 bits).")
+
+print("\nQ2. Principal fator limitante:")
+print("    R: A quantidade de qubits lógicos necessários e a extrema profundidade (Circuit")
+print("    Depth) do oráculo de exponenciação modular, que causam decoerência no simulador.")
+
+print("\nQ3. Por que é vulnerável mesmo sem quebrar a chave real?")
+print("    R: O algoritmo de Shor demonstra matematicamente que o problema da fatoração")
+print("    possui complexidade de tempo polinomial num computador quântico, eliminando a")
+print("    segurança exponencial que protege o RSA clássico.")
+
+print("\nQ4. Qual algoritmo PQC substituto e por quê?")
+print("    R: ML-KEM (Kyber). Como o RSA-OAEP atua no estabelecimento de chaves seguras,")
+print("    o substituto deve ser um Key Encapsulation Mechanism (KEM).")
+
+print("\nQ5. Custo quantitativo da migração?")
+print("    R: Conforme capítulo 7, o custo primário é de armazenamento e comunicação (aumento")
+print("    no tamanho de chaves e ciphertexts), compensado pela rapidez no processamento.")
+
+print("\nQ6. Alterações de infraestrutura em um sistema real?")
+print("    R: Atualização de bibliotecas de criptografia, aumento do tamanho de buffers de")
+print("    rede (TLS/TCP) e emissão de novos formatos de certificados X.509.")
+
+print("\nQ7. A simples substituição é suficiente?")
+print("    R: Não. São necessárias alterações arquiteturais como o uso de 'Criptografia")
+print("    Híbrida' (combinando PQC e clássica durante o período de transição) para mitigar")
+print("    ataques do tipo 'Harvest Now, Decrypt Later'.")
+print("="*82)
+
+"""
 Gráfico de desempenho isolado do ML-KEM (Capítulo 5.1)
 """
 fig_kem, axs_kem = plt.subplots(1, 2, figsize=(12, 5))

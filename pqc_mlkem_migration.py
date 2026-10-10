@@ -11,13 +11,74 @@
  de chaves, especificamente o ML-KEM. 
 """
 
+import os
 import time
+import matplotlib.pyplot as plt
+import numpy as np
+
 try:
     import oqs
 except ImportError:
     print("Erro: A biblioteca 'liboqs-python' não foi encontrada.")
     print("Instale utilizando: pip install liboqs-python (no ambiente virtual)")
     exit(1)
+
+try:
+    from cryptography.hazmat.primitives.asymmetric import rsa, padding
+    from cryptography.hazmat.primitives import hashes, serialization
+except ImportError:        
+    print("Erro: A biblioteca 'cryptography' não foi encontrada.")
+    print("Instale utilizando: pip install cryptography")
+    exit(1)
+
+def benchmark_rsa_2048_oaep():
+    """
+    Realiza o benchmark da solução atual (RSA-2048-OAEP) para extrair
+    metricas reais de tempo e tamanho (Baseline para o capítulo 6).
+    """
+    # KeyGen
+    start = time.perf_counter()
+    private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    keygen_t = time.perf_counter() - start
+
+    public_key = private_key.public_key()
+    pub_bytes = public_key.public_bytes(
+        encoding=serialization.Encoding.DER,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo
+    )
+    priv_bytes = private_key.private_bytes(
+        encoding=serialization.Encoding.DER,
+        format=serialization.PrivateFormat.PKCS8,
+        encryption_algorithm=serialization.NoEncryption()       
+    )
+
+    secret = os.urandom(32) # Segredo com padrão de 256 bits
+
+    # Encaps (Cifragem)
+    start = time.perf_counter()
+    ciphertext = public_key.encrypt(
+        secret,
+        padding.OAEP(mgf=padding.MGF1(algorithm=hashes.SHA256()), algorithm=hashes.SHA256(), label=None)
+    )
+    encaps_t = time.perf_counter()
+
+    # Decaps (Decifragem)
+    start = time.perf_counter()
+    decrypted = private_key.decrypt(
+        ciphertext,
+        padding.OAEP(mgf=padding.MGF1(algorithm=hashes.SHA256()), algorithm=hashes.SHA256(), label=None)
+    )
+    decaps_t = time.perf_counter() - start
+
+    return{
+        "pub_size": len(pub_bytes),
+        "priv_size": len(priv_bytes),
+        "cipher_size": len(ciphertext),
+        "secret_size": len(secret),
+        "keygen_t": keygen_t,
+        "encaps_t": encaps_t,
+        "decaps_t": decaps_t       
+    }
 
 def executar_mlkem():
     """
@@ -28,9 +89,9 @@ def executar_mlkem():
 # Seleciona o algoritmo ML-KEM (Kyber-512 equivalente à segurança do AES-128)
 kem_name = "Kyber512"
 
-print("="*60)
+print("="*82)
 print(f"Implementação da alternativa PQC ({kem_name}) - (Cápitulo 5.1)")
-print("="*60)
+print("="*82)
 
 # Inicia o mecanismo KEM do open quantum safe""
 with oqs.KeyEncapsulation(kem_name) as kem:
@@ -40,7 +101,7 @@ with oqs.KeyEncapsulation(kem_name) as kem:
     """
     start_time = time.perf_counter()
     public_key = kem.generate_keypair()
-    keygen_time = time.perf_counter() - start_time
+    keygen_time = time.perf_counter() - start_time    
 
     # O segredo privado fica armazenado internamente no objeto 'kem'
     private_key = kem.export_secret_key()
@@ -80,14 +141,80 @@ with oqs.KeyEncapsulation(kem_name) as kem:
     """
     Etapa final - verificação
     """
-    print("\n" + "-"*60)
+    print("\n" + "-"*82)
     print("Verificação de integridade:")
     if shared_secret_sender == shared_secret_receiver:
-        print("[✔] SUCESSO! O segredo compartilhado foi estabelecido"
-        "\n    corretamente em ambas as pontas.")
-        print(f"\n    Segredo (Hex): {shared_secret_sender.hex()[:32]}...")
+        print("[✔] SUCESSO! ML-KEM KeyGen -> Encaps -> Decaps validados.")
+    #    print(f"\n    Segredo (Hex): {shared_secret_sender.hex()[:32]}...")
     else:
-        print("[✖] FALHA! Os segredos compartilhados não coincidem.")
-    print("="*60)
+        print("[✖] FALHA na verificação do ML-KEM.")
+    print("-"*82)
+    
+    pqc_metrics = {
+        "pub_size": len(public_key),
+        "priv_size": len(private_key),
+        "cipher_size": len(ciphertext),
+        "secret_size": len(shared_secret_sender),
+        "keygen_t": keygen_time,
+        "encaps_t": encaps_time,
+        "decaps_t": decaps_time
+    }    
+
+"""
+Comparação quantitativa (Tabela 2, capítulo 6 até 6.2)
+"""
+rsa_metrics = benchmark_rsa_2048_oaep()
+
+def calc_delta(vpqc, vatual):
+    return ((vpqc - vatual) / vatual) * 100
+
+print("\n" + "="*82)
+print("Comparação quantitativa (Tabela 2, capítulo 6.2)")
+print("="*82)
+print(f"{'Métrica':<30} | {'RSA-OAEP 2048':<15} | {'ML-KEM (Kyber)':<15} | {'Diferença (%)':<10}")
+print("-" * 82)
+
+metrics_map = [
+    ("Chave pública (Bytes)", "pub_size", False),
+    ("Chave privada (Bytes)", "priv_size", False),
+    ("Ciphertext (Bytes)", "cipher_size", False),
+    ("KeyGen (Segundos)", "keygen_t", True),
+    ("Encapsulação (Segundos)", "encaps_t", True),
+    ("Decapsulação (Segundos)", "decaps_t", True) 
+]
+
+for label, key, is_float in metrics_map:
+    v_rsa = rsa_metrics[key]
+    v_pqc = pqc_metrics[key]
+    delta = calc_delta(v_pqc, v_rsa)
+
+    if is_float:
+        print(f"{label:<30} | {v_rsa:<15.6f} | {v_pqc:<15.6f} | {delta:>+8.2f}%")
+    else:
+        print(f"{label:<30} | {v_rsa:<15} | {v_pqc:<15} | {delta:>+8.2f}%")
+
+"""
+Preparação: Avaliação da migração pós-quântica (Capítulo 7)
+"""
+print("\n" + "="*82)
+print("Insights de preparação da migração PQC (Capítulo 7)")
+print("="*82)
+
+print("[1] Armazenamento:")
+d_pub = calc_delta(pqc_metrics['pub_size'], rsa_metrics['pub_size'])
+print(f"    - Chaves públicas sofrerão um impacto de {d_pub:+.2f}%.")
+print("    - (Preparar exemplo numérico para 1 milhão de certificados).")
+
+print("\n[2] Comunicação:")
+d_ciph = calc_delta(pqc_metrics['cipher_size'], rsa_metrics['cipher_size'])
+print(f"    - Os ciphertexts/encapsulamentos sofrerão um impacto de {d_ciph:+.2f}%.")
+print("    - (Preparar cenário quantitativo para o volume de dados transmitidos).")
+    
+print("\n[3] Processamento:")
+d_kg = calc_delta(pqc_metrics['keygen_t'], rsa_metrics['keygen_t'])
+print(f"    - Velocidade de geração de chaves: {d_kg:+.2f}%.")
+print("    - ML-KEM costuma ser drasticamente mais rápido que o RSA clássico.")
+print("="*82)
+
 if __name__ == "__main__":
     executar_mlkem

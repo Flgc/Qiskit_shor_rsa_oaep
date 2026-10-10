@@ -149,6 +149,28 @@ Para fins de análise acadêmica, os resultados também são consolidados visual
 
 ![Insights](InsightsCapitulo7.png)
 
+## 🚀 Avaliação e análise final (Capítulos 7 e 8)
+
+Com a execução da rotina comparativa, o script consolida a análise do impacto arquitetural.
+
+![Avaliação da Migração](AvaliaçãodaMigração.png)
+
+### Impacto da migração (Capítulo 7)
+
+Para um volume de **1 milhão de operações/dia**:
+
+- **Armazenamento:** Houve aumento considerável no espaço necessário, ditado pelo tamanho superior das chaves públicas do ML-KEM.
+- **Comunicação:** Os pacotes de rede (ciphertexts) sofrem aumento de payload, exigindo maior largura de banda.
+- **Processamento:** O overhead de rede é largamente compensado pelo alívio computacional, já que o ML-KEM gera chaves em uma fração mínima do tempo do RSA.
+
+## 📋 Conclusão e respostas (Capítulo 8)
+
+![Analíse final](AnálisefinalCápitulo8.png)
+
+- **O Limite Quântico:** O experimento demonstrou a quebra da instância de $N=35$ (6 bits). O principal limitante para escalar para o RSA-2048 é a barreira física de qubits limpos (coerência) e a profundidade dos _gates_ (Circuit Depth).
+- **Adequação do ML-KEM:** Sendo o RSA-OAEP um algoritmo de transporte/encapsulamento de chaves, o ML-KEM provou ser a alternativa algorítmica exata em funcionalidade.
+- **Mudança Arquitetural:** O projeto conclui que uma simples troca de algoritmos não é suficiente. Devido a ameaças como _Harvest Now, Decrypt Later_, arquiteturas modernas exigem **Criptografia Híbrida** temporária, ajuste nos _buffers_ de rede TLS para _payloads_ maiores e novos formatos de certificados X.509.
+
 ## 🔧 Resolução de problemas comuns (Troubleshooting)
 
 ![Problemas e Soluções](https://img.shields.io/badge/Problemas_e_Soluções-🛠️-orange?style=for-the-badge)

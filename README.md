@@ -129,11 +129,17 @@ Em observação, a primeira execução demorou um pouco mais por conta da compil
 ![Compilacaoe](PQC_5_1d.png)
 ![Conclusao](PQC_5_1e.png)
 
-## 📊 Resultados do experimento PQC (capítulo 6 até 6.2))
+## 📊 Resultados do experimento PQC (capítulo 6 até 6.2)
 
 ![Análise de Testes](https://img.shields.io/badge/Análise_de_Testes-🧪-success?style=for-the-badge)
 
+A comparação quantitativa demonstra as variações de armazenamento e latência ao substituir o RSA clássico pelo ML-KEM. A saída no terminal exibe a diferença percentual ($\Delta$) exata:
+
 ![Tabela2](Tabela2-analiseCapitulo6.png)
+
+Para fins de análise acadêmica, os resultados também são consolidados visualmente. Observa-se que, enquanto o ML-KEM exige chaves maiores (impacto de armazenamento), ele é ordens de grandeza mais rápido na geração de chaves (KeyGen) do que o RSA (impacto positivo no processamento):
+
+![Comparativo Gráfico PQC](pqc_mlkem_comparativo.png)
 
 ## 💡 Insights de impacto (Capítulo 7)
 

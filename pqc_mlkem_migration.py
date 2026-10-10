@@ -216,5 +216,49 @@ print(f"    - Velocidade de geração de chaves: {d_kg:+.2f}%.")
 print("    - ML-KEM costuma ser drasticamente mais rápido que o RSA clássico.")
 print("="*82)
 
+"""
+Geração de gráficos comparativos (Capítulo 6 e 6.2)
+"""
+fig, axs = plt.subplots(1,2, figsize=(14, 6))
+fig.suptitle('Comparação quantitativa: RSA-OAEP 2048 vs ML-KEM (Capítulo 6.2)')
+
+width = 0.35
+
+# Gráfico 1: Armazenamento e comunicação (Bytes)
+labels_bytes = ['Chave pública', 'Chave privada', 'Ciphertext']
+rsa_bytes = [rsa_metrics['pub_size'], rsa_metrics['priv_size'], rsa_metrics['cipher_size']]
+pqc_bytes = [pqc_metrics['pub_size'], pqc_metrics['priv_size'], pqc_metrics['cipher_size']]
+
+x_bytes = np.arange(len(labels_bytes))
+
+axs[0].bar(x_bytes - width/2, rsa_bytes, width, label='RSA-OAEP 2048', color='dimgray')
+axs[0].bar(x_bytes + width/2, pqc_bytes, width, label='ML-KEM (Kyber512)', color='darkcyan')
+axs[0].set_ylabel('Tamanho (Bytes)')
+axs[0].set_title('Impacto no armazenamento / comunicação')
+axs[0].set_xticks(x_bytes)
+axs[0].set_xticklabels(labels_bytes)
+axs[0].legend()
+
+# Gráfico 2: Processamento (Segundos)
+labels_time = ['KeyGen', 'Encapsulação', 'Decapsulação']
+rsa_time = [rsa_metrics['keygen_t'], rsa_metrics['encaps_t'], rsa_metrics['decaps_t']]
+pqc_time = [pqc_metrics['keygen_t'], pqc_metrics['encaps_t'], pqc_metrics['decaps_t']]
+
+x_time = np.arange(len(labels_time))
+
+axs[1].bar(x_time - width/2, rsa_time, width, label='RSA-OAEP 2048', color='dimgray')
+axs[1].bar(x_time + width/2, pqc_time, width, label='ML-KEM (Kyber512)', color='darkcyan')
+axs[1].set_ylabel('Tempo (Segundos) - Escala logarítmica')
+axs[1].set_title('Impacto no processamento')
+axs[1].set_xticks(x_time)
+axs[1].set_xticklabels(labels_time)
+axs[1].set_yscale('log') # Escala logarítmica devido à extrema diferença de tempo no KeyGen
+axs[1].legend()
+
+plt.tight_layout()
+plt.savefig("pqc_mlkem_comparativo.png")
+print(f"\n[✔] Gráfico comparativo salvo como: \n'pqc_mlkem_comparativo.png'.")
+
+
 if __name__ == "__main__":
     executar_mlkem

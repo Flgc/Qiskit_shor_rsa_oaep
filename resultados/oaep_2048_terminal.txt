@@ -1,0 +1,36 @@
+============================================================================
+PARTE 1: RECONSTRUÇÃO DA CHAVE EM RSA-2048 COM OAEP-SHA256
+============================================================================
+
+[1] Dona da chave gera o par (30.1 ms)
+    - N com 2048 bits, e = 65537
+    - Chave pública (DER/SPKI): 294 bytes; privada (DER/PKCS#8): 1218 bytes
+
+[2] Remetente cifra um segredo de 32 bytes com OAEP-SHA256 (0.462 ms)
+    - Ciphertext: 256 bytes
+
+[3] Com (N, e) e o fator p, a chave privada é reconstruída (30.515 ms)
+    - Só aritmética: q = N/p, lambda(N) = lcm(p-1, q-1), d = e^(-1) mod lambda(N)
+
+[4] A chave reconstruída decifra o ciphertext (0.863 ms)
+    - Segredo recuperado: confere
+    - Chave reconstruída idêntica à original: sim
+
+    Conclusão: o OAEP protege o formato da mensagem, mas não o problema de fatorar N.
+    Resolvido esse problema, a chave privada sai por aritmética elementar.
+
+============================================================================
+PARTE 2: TAMANHO MÍNIMO DE MÓDULO PARA O OAEP-SHA256
+============================================================================
+
+    RFC 8017: k >= 2*hLen + 2. Com SHA-256 (hLen = 32 bytes):
+    k >= 66 bytes, ou seja, módulo de pelo menos 528 bits.
+    As instâncias do shor_rsa_oaep.py têm no máximo 8 bits, longe desse mínimo:
+    o OAEP só pode ser exercitado no tamanho real, como na Parte 1.
+
+    Módulo de 520 bits (65 bytes), mensagem vazia: falha (módulo pequeno demais)
+    Módulo de 528 bits (66 bytes), mensagem vazia: ok (66 bytes)
+    Módulo de 536 bits (67 bytes), mensagem vazia: ok (67 bytes)
+
+[✔] Dados salvos em 'resultados/oaep_2048.json'.
+

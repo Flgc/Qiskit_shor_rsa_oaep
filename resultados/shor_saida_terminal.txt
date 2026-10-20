@@ -1,0 +1,105 @@
+=== Início da avaliação experimental: Shor vs RSA-OAEP ===
+
+--- Analisando instância 1: N=15 (4 bits), chave pública (N, e) = (15, 3) ---
+    tentativa 1: a=2, sucesso em 50.20% dos shots (0.5 s)
+    p=3, q=5 -> d recuperado=3 (confere com a chave original); mensagem 2 -> cifrada 8 -> decifrada 2
+
+--- Analisando instância 2: N=21 (5 bits), chave pública (N, e) = (21, 5) ---
+    tentativa 1: a=4, nenhuma medição fatorou N (motivo mais comum: ordem ímpar); sorteando outro a
+    tentativa 2: a=17, nenhuma medição fatorou N (motivo mais comum: r candidato não é a ordem); sorteando outro a
+    tentativa 3: a=2, sucesso em 31.93% dos shots (10.7 s)
+    p=3, q=7 -> d recuperado=5 (confere com a chave original); mensagem 9 -> cifrada 18 -> decifrada 9
+
+--- Analisando instância 3: N=33 (6 bits), chave pública (N, e) = (33, 3) ---
+    tentativa 1: a=4, nenhuma medição fatorou N (motivo mais comum: ordem ímpar); sorteando outro a
+    tentativa 2: a=25, nenhuma medição fatorou N (motivo mais comum: ordem ímpar); sorteando outro a
+    tentativa 3: a=10, sucesso em 51.17% dos shots (4.6 s)
+    p=3, q=11 -> d recuperado=7 (confere com a chave original); mensagem 15 -> cifrada 9 -> decifrada 15
+    circuito de referência para o 3.2: a=2 (ordem máxima r=10)
+
+--- Analisando instância 4: N=77 (7 bits), chave pública (N, e) = (77, 7) ---
+    tentativa 1: a=6, nenhuma medição fatorou N (motivo mais comum: r candidato não é a ordem); sorteando outro a
+    tentativa 2: a=12, sucesso em 33.69% dos shots (421.4 s)
+    p=7, q=11 -> d recuperado=43 (confere com a chave original); mensagem 9 -> cifrada 37 -> decifrada 9
+    circuito de referência para o 3.2: a=2 (ordem máxima r=30)
+
+============================================================================
+RELATÓRIO DA MAIOR INSTÂNCIA SOLUCIONADA (3.1)
+============================================================================
+Algoritmo analisado: RSA-OAEP (problema subjacente: fatoração de N)
+Tamanho da instância: 7 bits
+Chave pública (N, e): (77, 7)
+Parâmetros criptográficos originais:
+  p=7, q=11, N=77, phi(N)=60, e=7, d=43
+Recuperado pelo Shor (a=12, ordem r=6):
+  p=7, q=11, d=43 (confere: sim)
+
+Métricas do Circuito Quântico (após transpilação para cx, rz, sx, x):
+  Número de Qubits: 21 (14 de contagem + 7 alvo)
+  Profundidade (Depth): 924389 (só portas de 2 qubits: 232974)
+  Total de Gates: 1550720
+  Gates de 2 qubits: 235571
+  Shots executados: 1024
+  Distribuição das medições: resultados/shor_histograma_N77.png
+  Probabilidade de sucesso (shots que fatoram N): 33.69%
+  Probabilidade de obter a ordem exata r: 33.50%
+  Tempo total de execução: 421.44 segundos (montagem 349.78 s, transpilação 3.47 s, simulação 68.19 s)
+  Tentativas até achar um 'a' útil: 2 (827.97 s no total)
+  Circuito de referência do 3.2 (a=2, ordem máxima r=30): profundidade 924594, 1550932 gates, 235571 de 2 qubits
+============================================================================
+
+Resumo das instâncias: circuito que recuperou a chave (Capítulo 3.1)
+   N bits   a   r qubits  profund.    portas  2 qubits  sucesso  montagem simulação
+  15    4   2   4     12      1936      3490       539   50.20%     0.10s     0.33s
+  21    5   2   6     15     40233     68343     10145   31.93%     1.99s     8.39s
+  33    6  10   2     18     16373     27945      4290   51.17%     2.74s     1.67s
+  77    7  12   6     21    924389   1550720    235571   33.69%   349.78s    68.19s
+
+Recursos do circuito de referência, 'a' de ordem máxima (gráficos do Capítulo 3.2)
+   N bits   a   r qubits  profund.    portas  2 qubits  montagem simulação
+  15    4   2   4     12      1936      3490       539     0.10s     0.33s
+  21    5   2   6     15     40233     68343     10145     1.99s     8.39s
+  33    6   2  10     18    196461    330848     49830    25.15s     9.35s
+  77    7   2  30     21    924594   1550932    235571   363.88s    67.84s
+
+============================================================================
+COMPARAÇÃO COM PARÂMETROS CRIPTOGRÁFICOS REAIS  (Cápitulo 4)
+============================================================================
+[1] COMPARAÇÃO DE ESCALA (Experimento vs. RSA-2048):
+    
+    - Tamanho da chave........: 7 bits (Exp) vs 2048 bits (Real)
+    - Qubits lógicos estimados: 21 (Exp) vs ~4.096 a 6.144 (Real)
+    - Profundidade do circuito: 924389 (Exp) vs Trilhões de operações (Real)
+
+[2] DISCUSSÃO DE VULNERABILIDADE (Teoria vs. prática):
+    
+    Por que o experimento demonstra a vulnerabilidade algorítmica, mas
+    não significa a quebra imediata de sistemas reais?
+    
+    O algoritmo de Shor comprova matematicamente que a fatoração possui
+    complexidade polinomial em computadores quânticos. No entanto, a
+    execução para RSA-2048 em hardware real esbarra em severas limitações:
+    
+    * Qubits físicos vs lógicos e QEC: Para obter ~4.000 qubits lógicos
+      estáveis, devido à Correção Quântica de Erros (QEC), seriam
+      necessários cerca de 20 milhões de qubits físicos ruidosos.
+    
+    * Decoerência e fidelidade: O tempo de coerência dos qubits atuais
+      é muito curto para suportar a profundidade extrema do oráculo modular
+      do RSA-2048 sem que o ruído destrua a superposição.
+    
+    * Conectividade e custo aritmético: Portas Toffoli e somadores quânticos
+      exigem alta conectividade (SWAP gates). O custo de implementação de
+      operações aritméticas quânticas cresce substancialmente na prática.
+============================================================================
+
+[✔] Histogramas salvos em 'resultados/shor_histograma_N*.png'.
+[✔] Gráficos de crescimento salvos como: 'resultados/shor_crescimento_recursos.png'.
+[✔] Probabilidade de sucesso por instância: 'resultados/shor_probabilidade_sucesso.png'.
+[✔] Dados brutos: 'resultados/shor_resultados.json' e 'resultados/shor_resumo.csv'.
+    
+
+=== Experimento quântico concluído com sucesso (Capítulos 1 a 4) ===
+    
+==> O fluxo segue agora para a mitigação no script 'pqc_mlkem_migration.py'.
+

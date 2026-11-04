@@ -1,0 +1,60 @@
+{
+  "descricao": "Reconstrução da chave privada de um RSA-2048-OAEP a partir de um fator, e tamanho mínimo de módulo do OAEP-SHA256.",
+  "ambiente": {
+    "data": "2026-10-19T15:20:52",
+    "python": "3.12.10",
+    "cryptography": "50.0.2",
+    "sistema": "Windows-10-10.0.19045-SP0",
+    "processador": "Intel64 Family 6 Model 151 Stepping 5, GenuineIntel"
+  },
+  "parte1_reconstrucao_2048": {
+    "tamanho_chave_bits": 2048,
+    "expoente_publico": 65537,
+    "n_bits": 2048,
+    "pub_der_bytes": 294,
+    "priv_der_bytes": 1218,
+    "ciphertext_bytes": 256,
+    "segredo_bytes": 32,
+    "segredo_recuperado_confere": true,
+    "chave_reconstruida_identica": true,
+    "tempo_keygen": {
+      "relogio_s": 0.030084900005022064,
+      "cpu_s": 0.03125
+    },
+    "tempo_cifragem": {
+      "relogio_s": 0.0004616999940481037,
+      "cpu_s": 0.0
+    },
+    "tempo_reconstrucao_chave": {
+      "relogio_s": 0.030514600017340854,
+      "cpu_s": 0.03125
+    },
+    "tempo_decifragem": {
+      "relogio_s": 0.0008630999946035445,
+      "cpu_s": 0.0
+    }
+  },
+  "parte2_limite_oaep": {
+    "hash": "SHA-256",
+    "h_len_bytes": 32,
+    "k_min_bytes": 66,
+    "modulo_min_bits": 528,
+    "testes_empiricos": [
+      {
+        "modulo_bits": 520,
+        "modulo_bytes": 65,
+        "cifra_ok": false
+      },
+      {
+        "modulo_bits": 528,
+        "modulo_bytes": 66,
+        "cifra_ok": true
+      },
+      {
+        "modulo_bits": 536,
+        "modulo_bytes": 67,
+        "cifra_ok": true
+      }
+    ]
+  }
+}

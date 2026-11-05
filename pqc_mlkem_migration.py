@@ -31,22 +31,23 @@ except ImportError:
     print("Instale utilizando: pip install cryptography")
     exit(1)
 
-def benchmark_rsa_2048_oaep():
-    """
-    Realiza o benchmark da solução atual (RSA-2048-OAEP) para extrair
-    metricas reais de tempo e tamanho (Baseline para o capítulo 6).
-    """
-    # KeyGen
-    start = time.perf_counter()
-    private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
-    keygen_t = time.perf_counter() - start
+INTERATIONS = 100 # Número de repetições para garantir média precisa
 
-    public_key = private_key.public_key()
-    pub_bytes = public_key.public_bytes(
+def benchmark_rsa_2048_oaep(iterations=INTERATIONS):
+    """
+    Realiza o benchmark da solução atual (RSA-2048-OAEP) com multiplas
+    execuçõrs para extrair médias reais de tempo.    
+    """
+    
+    keygen_times, encaps_times, decaps_times = [], [], []
+    
+    # Execução base para extrair tamanhos    
+    private_key_base = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    pub_bytes = private_key_base.public_key().public_bytes(
         encoding=serialization.Encoding.DER,
         format=serialization.PublicFormat.SubjectPublicKeyInfo
     )
-    priv_bytes = private_key.private_bytes(
+    priv_bytes = private_key_base.private_bytes(
         encoding=serialization.Encoding.DER,
         format=serialization.PrivateFormat.PKCS8,
         encryption_algorithm=serialization.NoEncryption()       
@@ -54,30 +55,37 @@ def benchmark_rsa_2048_oaep():
 
     secret = os.urandom(32) # Segredo com padrão de 256 bits
 
-    # Encaps (Cifragem)
-    start = time.perf_counter()
-    ciphertext = public_key.encrypt(
-        secret,
-        padding.OAEP(mgf=padding.MGF1(algorithm=hashes.SHA256()), algorithm=hashes.SHA256(), label=None)
+    # Loop de repetições para tempos médios
+    for _ in range(iterations):
+        # Encaps (Cifragem)
+        start = time.perf_counter()
+        priv_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+        keygen_times.append(time.perf_counter() - start)
+
+        pub_key = priv_key.public_key()
+
+        start = time.perf_counter()
+        ciphertext = pub_key.encrypt(
+            secret, padding.OAEP(mgf=padding.MGF1(algorithm=hashes.SHA256()), algorithm=hashes.SHA256(), label=None)
     )
-    encaps_t = time.perf_counter()
+    encaps_times.append(time.perf_counter() - start) # Correção aplicada
 
     # Decaps (Decifragem)
     start = time.perf_counter()
-    decrypted = private_key.decrypt(
+    decrypted = priv_key.decrypt(    
         ciphertext,
         padding.OAEP(mgf=padding.MGF1(algorithm=hashes.SHA256()), algorithm=hashes.SHA256(), label=None)
     )
-    decaps_t = time.perf_counter() - start
+    decaps_times.append(time.perf_counter() - start)
 
     return{
         "pub_size": len(pub_bytes),
         "priv_size": len(priv_bytes),
         "cipher_size": len(ciphertext),
-        "secret_size": len(secret),
-        "keygen_t": keygen_t,
-        "encaps_t": encaps_t,
-        "decaps_t": decaps_t       
+        "secret_size": len(secret),        
+        "keygen_t": sum(keygen_times) / iterations,              
+        "encaps_t": sum(encaps_times) / iterations,
+        "decaps_t": sum(decaps_times) / iterations        
     }
 
 def executar_mlkem():
@@ -87,77 +95,85 @@ def executar_mlkem():
     """
 
 # Seleciona o algoritmo ML-KEM (Kyber-512 equivalente à segurança do AES-128)
-kem_name = "Kyber512"
+kem_name = "ML-KEM-512"
 
-print("="*82)
+print("="*87)
 print(f"Implementação da alternativa PQC ({kem_name}) - (Cápitulo 5.1)")
-print("="*82)
+print(f"Executando {INTERATIONS} interações para cálculo de médias...")
+print("="*87)
 
 # Inicia o mecanismo KEM do open quantum safe""
 with oqs.KeyEncapsulation(kem_name) as kem:
+   
+    keygen_times, encaps_times, decaps_times = [], [], []
 
-    """
-    Etapa 1 - KeyGen - gera chaves
-    """
-    start_time = time.perf_counter()
-    public_key = kem.generate_keypair()
-    keygen_time = time.perf_counter() - start_time    
+    for i in range(INTERATIONS):
+        """
+        Etapa 1 - KeyGen - gera chaves
+        """
+        start = time.perf_counter()        
+        public_key = kem.generate_keypair()
+        keygen_times.append(time.perf_counter() - start)
 
-    # O segredo privado fica armazenado internamente no objeto 'kem'
-    private_key = kem.export_secret_key()
+        """
+        Etapa 2 - Encaps - operação criptográfica principal
+        O remetente usa a chave pública para gerar um ciphertext
+        e um segredo compartilhado.
+        """
+        start = time.perf_counter()
+        ciphertext, shared_secret_sender = kem.encap_secret(public_key)
+        encaps_times.append(time.perf_counter() - start)
+
+        """
+        Etapa 3 - Decaps - operação inversa / desencapsulamento
+        O destinatário usa sua chave privada para extrair o segredo do ciphertext.
+        """
+        start = time.perf_counter()
+        shared_secret_receiver = kem.decap_secret(ciphertext)
+        decaps_times.append(time.perf_counter() - start)
+
+        # Verificação apenas na última iteração para exibir  no terminal
+        if i == INTERATIONS -1:
+            # O segredo privado fica armazenado internamente no objeto 'kem'
+            private_key = kem.export_secret_key()
+            valido = (shared_secret_sender == shared_secret_receiver)
+
+    avg_keygen = sum(keygen_times) / INTERATIONS
+    avg_encaps = sum(encaps_times) / INTERATIONS
+    avg_decaps = sum(decaps_times) / INTERATIONS
     
     print("\n[1] KeyGen - Geração de chaves concluída:")
-    print(f"    - Tempo de geração: {keygen_time:.6f} segundos")
+    print(f"    - Tempo médio de geração: {avg_keygen:.6f} segundos")    
     print(f"    - Tamanho da chave pública: {len(public_key)} bytes")
     print(f"    - Tamanho da chave privada: {len(private_key)} bytes")   
-
-    """
-    Etapa 2 - Encaps - operação criptográfica principal
-
-    O remetente usa a chave pública para gerar um ciphertext
-    e um segredo compartilhado.
-    """
-    start_time = time.perf_counter()
-    ciphertext, shared_secret_sender = kem.encap_secret(public_key)
-    encaps_time = time.perf_counter() - start_time
     
     print("\n[2] Encaps - Encapsulamento da chave (remetente):")
-    print(f"    - Tempo de encapsulamento: {encaps_time:.6f} segundos")
+    print(f"    - Tempo de médio de encapsulamento: {avg_encaps:.6f} segundos")
     print(f"    - Tamanho do ciphertext: {len(ciphertext)} bytes")
     print(f"    - Tamanho do segredo compartilhado: {len(shared_secret_sender)} bytes")
-
-    """
-    Etapa 3 - Decaps - operação inversa / desencapsulamento
-
-    O destinatário usa sua chave privada para extrair o segredo do ciphertext.
-    """
-    start_time = time.perf_counter()
-    shared_secret_receiver = kem.decap_secret(ciphertext)
-    decaps_time = time.perf_counter() - start_time
-    
+  
     print("\n[3] Decaps - Desencapsulamento da chave (destinatário):")
-    print(f"    - Tempo de desencapsulamento: {decaps_time:.6f} segundos")
+    print(f"    - Tempo médio de desencapsulamento: {avg_decaps:.6f} segundos")
 
     """
     Etapa final - verificação
     """
-    print("\n" + "-"*82)
+    print("\n" + "-"*87)
     print("Verificação de integridade:")
-    if shared_secret_sender == shared_secret_receiver:
-        print("[✔] SUCESSO! ML-KEM KeyGen -> Encaps -> Decaps validados.")
-    #    print(f"\n    Segredo (Hex): {shared_secret_sender.hex()[:32]}...")
+    if valido:
+        print(f"[✔] SUCESSO! {kem_name} KeyGen -> Encaps -> Decaps validados.")    
     else:
-        print("[✖] FALHA na verificação do ML-KEM.")
-    print("-"*82)
+        print(f"[✖] FALHA na verificação do {kem_name}.")
+    print("-"*87)
     
     pqc_metrics = {
         "pub_size": len(public_key),
         "priv_size": len(private_key),
         "cipher_size": len(ciphertext),
         "secret_size": len(shared_secret_sender),
-        "keygen_t": keygen_time,
-        "encaps_t": encaps_time,
-        "decaps_t": decaps_time
+        "keygen_t": avg_keygen,
+        "encaps_t": avg_encaps,
+        "decaps_t": avg_decaps
     }    
 
 """
@@ -168,11 +184,11 @@ rsa_metrics = benchmark_rsa_2048_oaep()
 def calc_delta(vpqc, vatual):
     return ((vpqc - vatual) / vatual) * 100
 
-print("\n" + "="*82)
+print("\n" + "="*87)
 print("Comparação quantitativa (Tabela 2, capítulo 6.2)")
-print("="*82)
-print(f"{'Métrica':<30} | {'RSA-OAEP 2048':<15} | {'ML-KEM (Kyber)':<15} | {'Diferença (%)':<10}")
-print("-" * 82)
+print("="*87)
+print(f"{'Métrica':<30} | {'RSA-OAEP 2048':<15} | {kem_name:<15} | {'Diferença (%)':<10}")
+print("-" * 87)
 
 metrics_map = [
     ("Chave pública (Bytes)", "pub_size", False),
@@ -194,34 +210,11 @@ for label, key, is_float in metrics_map:
         print(f"{label:<30} | {v_rsa:<15} | {v_pqc:<15} | {delta:>+8.2f}%")
 
 """
-Preparação: Avaliação da migração pós-quântica (Capítulo 7)
-"""
-print("\n" + "="*82)
-print("Insights de preparação da migração PQC (Capítulo 7)")
-print("="*82)
-
-print("[1] Armazenamento:")
-d_pub = calc_delta(pqc_metrics['pub_size'], rsa_metrics['pub_size'])
-print(f"    - Chaves públicas sofrerão um impacto de {d_pub:+.2f}%.")
-print("    - (Preparar exemplo numérico para 1 milhão de certificados).")
-
-print("\n[2] Comunicação:")
-d_ciph = calc_delta(pqc_metrics['cipher_size'], rsa_metrics['cipher_size'])
-print(f"    - Os ciphertexts/encapsulamentos sofrerão um impacto de {d_ciph:+.2f}%.")
-print("    - (Preparar cenário quantitativo para o volume de dados transmitidos).")
-    
-print("\n[3] Processamento:")
-d_kg = calc_delta(pqc_metrics['keygen_t'], rsa_metrics['keygen_t'])
-print(f"    - Velocidade de geração de chaves: {d_kg:+.2f}%.")
-print("    - ML-KEM costuma ser drasticamente mais rápido que o RSA clássico.")
-print("="*82)
-
-"""
 Avaliação da migração pós-quântica (Capítulo 7)
 """
-print("\n" + "-"*82)
-print("Avaliação da migração PQC")
-print("-"*82)
+print("\n" + "-"*87)
+print("Avaliação da migração PQC (Capítulo 7)")
+print("-"*87)
 
 # Simulação de cenário: 1.000.000 de operações
 operacoes = 1_000_000
@@ -255,9 +248,9 @@ print(f"         devido ao aumento do ciphertext, mais do que o consumo de CPU e
 """
 Análise Final (Capítulo 8)
 """
-print("\n" + "="*82)
+print("\n" + "="*87)
 print("Análise final (Capítulo 8)")
-print("="*82)
+print("="*87)
 print("Q1. Maior instância comprometida via Shor:")
 print("    R: N=35 (6 bits).")
 
@@ -271,7 +264,7 @@ print("    possui complexidade de tempo polinomial num computador quântico, eli
 print("    segurança exponencial que protege o RSA clássico.")
 
 print("\nQ4. Qual algoritmo PQC substituto e por quê?")
-print("    R: ML-KEM (Kyber). Como o RSA-OAEP atua no estabelecimento de chaves seguras,")
+print("    R: ML-KEM-512. Como o RSA-OAEP atua no estabelecimento de chaves seguras,")
 print("    o substituto deve ser um Key Encapsulation Mechanism (KEM).")
 
 print("\nQ5. Custo quantitativo da migração?")
@@ -286,13 +279,13 @@ print("\nQ7. A simples substituição é suficiente?")
 print("    R: Não. São necessárias alterações arquiteturais como o uso de 'Criptografia")
 print("    Híbrida' (combinando PQC e clássica durante o período de transição) para mitigar")
 print("    ataques do tipo 'Harvest Now, Decrypt Later'.")
-print("="*82)
+print("="*87)
 
 """
-Gráfico de desempenho isolado do ML-KEM (Capítulo 5.1)
+Gráfico de desempenho isolado do ML-KEM-512 (Capítulo 5.1)
 """
 fig_kem, axs_kem = plt.subplots(1, 2, figsize=(12, 5))
-fig_kem.suptitle('Análise de desempenho isolado: ML-KEM (Kyber512) - Capítulo 5.1')
+fig_kem.suptitle(f'Análise de desempenho isolado: {kem_name} - Capítulo 5.1')
 
 # Gráfico 1: Tamanhos (Bytes)
 labels_sizes = ['Chave pública', 'Chave privada', 'Ciphertext']
@@ -318,7 +311,7 @@ print(f"\n[✔] Gráfico de desempenho isolado do PQC salvo como: \n'mlkem_desem
 Geração de gráficos comparativos (Capítulo 6 e 6.2)
 """
 fig, axs = plt.subplots(1,2, figsize=(14, 6))
-fig.suptitle('Comparação quantitativa: RSA-OAEP 2048 vs ML-KEM (Capítulo 6.2)')
+fig.suptitle(f'Comparação quantitativa: RSA-OAEP 2048 vs {kem_name} (Capítulo 6.2)')
 
 width = 0.35
 
@@ -330,7 +323,7 @@ pqc_bytes = [pqc_metrics['pub_size'], pqc_metrics['priv_size'], pqc_metrics['cip
 x_bytes = np.arange(len(labels_bytes))
 
 axs[0].bar(x_bytes - width/2, rsa_bytes, width, label='RSA-OAEP 2048', color='dimgray')
-axs[0].bar(x_bytes + width/2, pqc_bytes, width, label='ML-KEM (Kyber512)', color='darkcyan')
+axs[0].bar(x_bytes + width/2, pqc_bytes, width, label=kem_name, color='darkcyan')
 axs[0].set_ylabel('Tamanho (Bytes)')
 axs[0].set_title('Impacto no armazenamento / comunicação')
 axs[0].set_xticks(x_bytes)
@@ -345,7 +338,7 @@ pqc_time = [pqc_metrics['keygen_t'], pqc_metrics['encaps_t'], pqc_metrics['decap
 x_time = np.arange(len(labels_time))
 
 axs[1].bar(x_time - width/2, rsa_time, width, label='RSA-OAEP 2048', color='dimgray')
-axs[1].bar(x_time + width/2, pqc_time, width, label='ML-KEM (Kyber512)', color='darkcyan')
+axs[1].bar(x_time + width/2, pqc_time, width, label=kem_name, color='darkcyan')
 axs[1].set_ylabel('Tempo (Segundos) - Escala logarítmica')
 axs[1].set_title('Impacto no processamento')
 axs[1].set_xticks(x_time)

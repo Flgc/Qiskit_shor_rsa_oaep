@@ -1,0 +1,7 @@
+qiskit>=1.0.0
+qiskit-aer
+matplotlib
+numpy
+pylatexenc
+liboqs-python
+cryptography

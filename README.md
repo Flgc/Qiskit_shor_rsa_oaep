@@ -42,10 +42,10 @@ sudo apt install python3-venv python3-pip -y git -y
 python3 -m venv venv_shor
 ```
 
-**3. Instale as dependências essenciais do Qiskit 1.x:**
+**3. Instale as dependências via requirements.txt**
 
 ```bash
-pip install qiskit qiskit-aer matplotlib numpy pylatexenc
+pip install -r requirements.txt
 ```
 
 **3.1. Instale as dependências do "C" para o linux (Capítulo 5 e 5.1)**
@@ -53,12 +53,6 @@ pip install qiskit qiskit-aer matplotlib numpy pylatexenc
 ```bash
 sudo apt update
 sudo apt install build-essential cmake ninja-build libssl-dev -y
-```
-
-**3.2. Instale as dependências para extrair os tempos reais do RSA (Capítulo 6 e 6.2)**
-
-```bash
-pip install qiskit qiskit-aer matplotlib numpy pylatexenc liboqs-python cryptography
 ```
 
 **4. Ative o ambiente virtual:**
@@ -119,19 +113,15 @@ deactivate
 
 ![Criptografia PQC](https://img.shields.io/badge/Criptografia_PQC-⚛️_🛡️-darkblue?style=for-the-badge)
 
-Como o RSA-OAEP atua no estabelecimento e encapsulamento de chaves, a alternativa PQC implementada foi o **ML-KEM** (Kyber). O algoritmo obedece ao fluxo de geração de chaves (KeyGen), encapsulamento pelo remetente (Encaps) e desencapsulamento pelo destinatário (Decaps).
+Como o RSA-OAEP atua no estabelecimento e encapsulamento de chaves, a alternativa PQC implementada foi o **ML-KEM-512**. O algoritmo obedece ao fluxo de geração de chaves (KeyGen), encapsulamento pelo remetente (Encaps) e desencapsulamento pelo destinatário (Decaps).
 
-O desempenho isolado destas operações foi plotado graficamente para demonstrar o comportamento do Kyber512 em hardware atual:
+O desempenho isolado destas operações foi plotado graficamente para demonstrar o comportamento do ML-KEM-512 em hardware atual (calculado com base em 100 execuções para extração de médias precisas):
 
 ![Desempenho isolado ML-KEM](mlkem_desempenho_isolado.png)
 
 _(Nota: Na primeira execução, o processo pode demorar alguns segundos adicionais devido à compilação em "C" da biblioteca open-quantum-safe)._
 
 ![Compilacao1](PQC_5_1a.png)
-![Compilacao2](PQC_5_1b.png)
-![Compilacao3](PQC_5_1c.png)
-![Compilacaoe](PQC_5_1d.png)
-![Conclusao](PQC_5_1e.png)
 
 ## 📊 Resultados do experimento PQC (capítulo 6 até 6.2)
 
@@ -144,10 +134,6 @@ A comparação quantitativa demonstra as variações de armazenamento e latênci
 Para fins de análise acadêmica, os resultados também são consolidados visualmente. Observa-se que, enquanto o ML-KEM exige chaves maiores (impacto de armazenamento), ele é ordens de grandeza mais rápido na geração de chaves (KeyGen) do que o RSA (impacto positivo no processamento):
 
 ![Comparativo Gráfico PQC](pqc_mlkem_comparativo.png)
-
-## 💡 Insights de impacto (Capítulo 7)
-
-![Insights](InsightsCapitulo7.png)
 
 ## 🚀 Avaliação e análise final (Capítulos 7 e 8)
 
@@ -168,7 +154,7 @@ Para um volume de **1 milhão de operações/dia**:
 ![Analíse final](AnálisefinalCápitulo8.png)
 
 - **O Limite Quântico:** O experimento demonstrou a quebra da instância de $N=35$ (6 bits). O principal limitante para escalar para o RSA-2048 é a barreira física de qubits limpos (coerência) e a profundidade dos _gates_ (Circuit Depth).
-- **Adequação do ML-KEM:** Sendo o RSA-OAEP um algoritmo de transporte/encapsulamento de chaves, o ML-KEM provou ser a alternativa algorítmica exata em funcionalidade.
+- **Adequação do ML-KEM:** Sendo o RSA-OAEP um algoritmo de transporte/encapsulamento de chaves, o ML-KEM-512 provou ser a alternativa algorítmica exata em funcionalidade.
 - **Mudança Arquitetural:** O projeto conclui que uma simples troca de algoritmos não é suficiente. Devido a ameaças como _Harvest Now, Decrypt Later_, arquiteturas modernas exigem **Criptografia Híbrida** temporária, ajuste nos _buffers_ de rede TLS para _payloads_ maiores e novos formatos de certificados X.509.
 
 ## 🔧 Resolução de problemas comuns (Troubleshooting)
